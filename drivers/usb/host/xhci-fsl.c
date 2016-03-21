@@ -86,6 +86,13 @@ static int fsl_xhci_core_init(struct fsl_xhci *fsl_xhci)
 	fsl_xhci_set_beat_burst_length(fsl_xhci->dwc3_reg);
 
 	/*
+	* A-010151: USB controller to configure USB in P2 mode
+	* whenever the Receive Detect feature is required
+	*/
+	dwc3_set_rxdetect_power_mode(fsl_xhci->dwc3_reg,
+				     DWC3_GUSB3PIPECTL_DISRXDETP3);
+
+	/*
 	 * A-010151: The dwc3 phy TSMC 28-nm HPM 0.9/1.8 V does not
 	 * reliably support Rx Detect in P3 mode(P3 is the default
 	 * setting). Therefore, some USB3.0 devices may not be detected
