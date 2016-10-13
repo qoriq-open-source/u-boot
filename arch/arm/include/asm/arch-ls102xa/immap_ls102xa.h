@@ -172,6 +172,10 @@ struct ccsr_gur {
 #define SCFG_PMCINTECR_ETSECERRG0	0x00080000
 #define SCFG_PMCINTECR_ETSECERRG1	0x00040000
 #define SCFG_CLUSTERPMCR_WFIL2EN	0x80000000
+#define SCFG_BASE                       0x01570000
+#define SCFG_USB3PRM1CR                 0x070
+#define USB_TXVREFTUNE                  0x9
+
 
 /* Supplemental Configuration Unit */
 struct ccsr_scfg {
