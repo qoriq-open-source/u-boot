@@ -149,6 +149,7 @@
 #define SCFG_USB3PRM2CR                 0x004
 #define SCFG_USB3PRM1CR_INIT		0x27672b2a
 #define USB_TXVREFTUNE                 0x9
+#define USB_TXVREFTUNE                 0x9
 #define USB_SQRXTUNE                   0xFC7FFFFF
 #define USB_PCSTXSWINGFULL             0x47
 #define SCFG_QSPICLKCTLR	0x10
