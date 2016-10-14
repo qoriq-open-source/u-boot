@@ -130,6 +130,13 @@
 #define DCFG_RCWSR15_IFCGRPABASE_QSPI	0x3
 
 #define DCFG_DCSR_BASE		0X700100000ULL
+#define DCSR_USB_PHY1                  0x4600000
+#define DCSR_USB_PHY2                  0x4610000
+#define DCSR_USB_PHY_RX_OVRD_IN_HI     0x1006
+#define USB_PHY_RX_EQ_VAL_1            0x0000
+#define USB_PHY_RX_EQ_VAL_2            0x0080
+#define USB_PHY_RX_EQ_VAL_3            0x0380
+#define USB_PHY_RX_EQ_VAL_4            0x0b80
 #define DCFG_DCSR_PORCR1		0x000
 
 /* Interrupt Sampling Control */

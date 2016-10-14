@@ -235,6 +235,18 @@ struct ccsr_gur {
 #define SCFG_USB3PRM2CR_USB3           0x08c
 #define USB_TXVREFTUNE                 0x9
 #define USB_SQRXTUNE                   0xFC7FFFFF
+#define USB_PCSTXSWINGFULL             0x47
+#define USB_PHY1                       0x084F0000
+#define USB_PHY2                       0x08500000
+#define USB_PHY3                       0x08510000
+#define USB_PHY_RX_OVRD_IN_HI          0x200c
+/* TODO : make it generic */
+#define USB_PHY_RX_EQ_VAL_1            0x0000
+#define USB_PHY_RX_EQ_VAL_2            0x8000
+#define USB_PHY_RX_EQ_VAL_3            0x8003
+
+#define USB_PHY_RX_EQ_VAL_4            0x800b
+
 
 	u32     devdisr2;       /* Device disable control 2 */
 	u32     devdisr3;       /* Device disable control 3 */
