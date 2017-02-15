@@ -73,7 +73,7 @@ ENDPROC(smp_kick_all_cpus)
 ENTRY(lowlevel_init)
 	mov	x29, lr			/* Save LR */
 
-#ifdef CONFIG_FSL_LSCH3
+#if defined(CONFIG_FSL_LSCH3) && defined (CONFIG_SYS_FSL_HAS_CCN504)
 
 	/* Set Wuo bit for RN-I 20 */
 #ifdef CONFIG_LS2080A
@@ -328,7 +328,9 @@ get_svr:
 	ldr	x1, =FSL_LSCH3_SVR
 	ldr	w0, [x1]
 	ret
+#endif
 
+#ifdef CONFIG_SYS_FSL_HAS_CCN504
 hnf_pstate_poll:
 	/* x0 has the desired status, return 0 for success, 1 for timeout
 	 * clobber x1, x2, x3, x4, x6, x7
@@ -406,7 +408,7 @@ ENTRY(__asm_flush_l3_dcache)
 	mov	lr, x29
 	ret
 ENDPROC(__asm_flush_l3_dcache)
-#endif
+#endif /* CONFIG_SYS_FSL_HAS_CCN504 */
 
 #ifdef CONFIG_MP
 	/* Keep literals not used by the secondary boot code outside it */

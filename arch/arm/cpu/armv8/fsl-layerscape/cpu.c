@@ -14,6 +14,7 @@
 #include <asm/arch/soc.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/speed.h>
+#include <fsl_immap.h>
 #ifdef CONFIG_MP
 #include <asm/arch/mp.h>
 #endif

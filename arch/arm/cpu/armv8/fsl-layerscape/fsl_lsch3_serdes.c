@@ -28,6 +28,11 @@ __weak void wriop_init_dpmac_qsgmii(int sd, int lane_prtcl)
 	return;
 }
 
+__weak int serdes_get_number(int serdes, int cfg)
+{
+	return cfg;
+}
+
 int is_serdes_configured(enum srds_prtcl device)
 {
 	int ret = 0;
@@ -73,6 +78,9 @@ int serdes_get_first_lane(u32 sd, enum srds_prtcl device)
 		printf("invalid SerDes%d\n", sd);
 		break;
 	}
+
+	cfg = serdes_get_number(sd, cfg);
+
 	/* Is serdes enabled at all? */
 	if (cfg == 0)
 		return -ENODEV;
@@ -99,6 +107,8 @@ void serdes_init(u32 sd, u32 sd_addr, u32 rcwsr, u32 sd_prctl_mask,
 
 	cfg = gur_in32(&gur->rcwsr[rcwsr - 1]) & sd_prctl_mask;
 	cfg >>= sd_prctl_shift;
+
+	cfg = serdes_get_number(sd, cfg);
 	printf("Using SERDES%d Protocol: %d (0x%x)\n", sd + 1, cfg, cfg);
 
 	if (!is_serdes_prtcl_valid(sd, cfg))
