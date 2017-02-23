@@ -7,6 +7,7 @@ config ARCH_LS1012A
 	select SYS_FSL_ERRATUM_A010315
 	select ARCH_EARLY_INIT_R
 	select BOARD_EARLY_INIT_F
+	select SYS_FSL_HAS_CCI400
 
 config ARCH_LS1043A
 	bool
@@ -26,6 +27,7 @@ config ARCH_LS1043A
 	select SYS_FSL_HAS_DDR4
 	select ARCH_EARLY_INIT_R
 	select BOARD_EARLY_INIT_F
+	select SYS_FSL_HAS_CCI400
 
 config ARCH_LS1046A
 	bool
@@ -45,6 +47,7 @@ config ARCH_LS1046A
 	select SYS_FSL_SRDS_2
 	select ARCH_EARLY_INIT_R
 	select BOARD_EARLY_INIT_F
+	select SYS_FSL_HAS_CCI400
 
 config ARCH_LS2080A
 	bool
@@ -193,6 +196,9 @@ config SYS_FSL_IFC_BANK_COUNT
 	default 4 if ARCH_LS1043A
 	default 4 if ARCH_LS1046A
 	default 8 if ARCH_LS2080A
+
+config SYS_FSL_HAS_CCI400
+	bool
 
 config SYS_FSL_HAS_DP_DDR
 	bool

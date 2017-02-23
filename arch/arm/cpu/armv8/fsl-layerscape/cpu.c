@@ -29,6 +29,7 @@
 #ifdef CONFIG_SYS_FSL_DDR
 #include <fsl_ddr.h>
 #endif
+#include <fsl_immap.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 

@@ -5,6 +5,7 @@
  */
 
 #include <common.h>
+#include <fsl_immap.h>
 #include <fsl_ifc.h>
 #include <ahci.h>
 #include <scsi.h>
