@@ -76,6 +76,7 @@ config ARCH_LS2080A
 	select SYS_FSL_ERRATUM_A009803
 	select SYS_FSL_ERRATUM_A009942
 	select SYS_FSL_ERRATUM_A010165
+	select SYS_FSL_ERRATUM_A009203
 	select ARCH_EARLY_INIT_R
 	select BOARD_EARLY_INIT_F
 
@@ -300,6 +301,9 @@ config RESV_RAM
 	  access to this reserved memory. For example, the reserved RAM can
 	  be at the high end of physical memory. The reserve RAM may be
 	  excluded from memory bank(s) passed to OS, or marked as reserved.
+
+config SYS_FSL_ERRATUM_A009203
+	bool
 
 config SYS_FSL_ERRATUM_A008336
 	bool
