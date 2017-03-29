@@ -51,6 +51,7 @@ void spl_board_init(void)
 	out_le32(SMMU_SCR0, val);
 	val = (in_le32(SMMU_NSCR0) | SCR0_CLIENTPD_MASK) & ~(SCR0_USFCFG_MASK);
 	out_le32(SMMU_NSCR0, val);
+	printf("Completed spl_board_init\n");
 #endif
 }
 #endif
