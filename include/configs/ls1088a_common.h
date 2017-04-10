@@ -33,9 +33,6 @@
 #define  CONFIG_SPI_FLASH_BAR
 #define CONFIG_SKIP_LOWLEVEL_INIT
 
-/* Flat Device Tree Definitions */
-/* #define CONFIG_OF_LIBFDT */
-
 #define CONFIG_FSL_DDR_INTERACTIVE	/* Interactive debugging */
 
 #define CONFIG_VERY_BIG_RAM
@@ -139,6 +136,11 @@ unsigned long long get_qixis_addr(void);
 
 /* Command line configuration */
 #define CONFIG_CMD_ENV
+#define CONFIG_CMD_GREPENV
+#define CONFIG_CMD_MII
+#define CONFIG_CMD_CACHE
+#define CONFIG_CMD_EXT2
+#define CONFIG_CMD_FAT
 
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_LOAD_ADDR	(CONFIG_SYS_DDR_SDRAM_BASE + 0x10000000)
