@@ -18,7 +18,7 @@ static u8 serdes1_prtcl_map[SERDES_PRCTL_COUNT];
 static u8 serdes2_prtcl_map[SERDES_PRCTL_COUNT];
 #endif
 
-#ifdef CONFIG_FSL_MC_ENET
+#if defined(CONFIG_FSL_MC_ENET) && !defined(CONFIG_SPL_BUILD)
 int xfi_dpmac[XFI8 + 1];
 int sgmii_dpmac[SGMII16 + 1];
 #endif
@@ -103,7 +103,7 @@ void serdes_init(u32 sd, u32 sd_addr, u32 sd_prctl_mask, u32 sd_prctl_shift,
 			debug("Unknown SerDes lane protocol %d\n", lane_prtcl);
 		else {
 			serdes_prtcl_map[lane_prtcl] = 1;
-#ifdef CONFIG_FSL_MC_ENET
+#if defined(CONFIG_FSL_MC_ENET) && !defined(CONFIG_SPL_BUILD)
 			switch (lane_prtcl) {
 			case QSGMII_A:
 				wriop_init_dpmac(sd, 5, (int)lane_prtcl);
@@ -152,7 +152,7 @@ void serdes_init(u32 sd, u32 sd_addr, u32 sd_prctl_mask, u32 sd_prctl_shift,
 
 void fsl_serdes_init(void)
 {
-#ifdef CONFIG_FSL_MC_ENET
+#if defined(CONFIG_FSL_MC_ENET) && !defined(CONFIG_SPL_BUILD)
 	int i , j;
 
 	for (i = XFI1, j = 1; i <= XFI8; i++, j++)
