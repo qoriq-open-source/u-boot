@@ -1211,10 +1211,12 @@ int fsl_mc_ldpaa_exit(bd_t *bd)
 	if (bd && get_mc_boot_status() != 0)
 		return 0;
 
+	/* For case MC is loaded but DPL is not deployed, return success and
+	 * print message on console. Else FDT fix-up code execution hanged. */
 	if (bd && !get_mc_boot_status() && get_dpl_apply_status() == -1) {
-		printf("ERROR: fsl-mc: DPL is not applied\n");
-		err = -ENODEV;
-		return err;
+		printf("fsl-mc: MC is loaded but DPL is not deployed \n\
+			So, DPAA2 ethernet will not work in Linux\n");
+		return 0;
 	}
 
 	if (bd && !get_mc_boot_status() && !get_dpl_apply_status())
