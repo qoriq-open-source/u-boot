@@ -286,6 +286,8 @@ int ft_board_setup(void *blob, bd_t *bd)
 
 	fsl_fdt_fixup_dr_usb(blob, bd);
 
+	fdt_fsl_mc_fixup_iommu_map_entry(blob);
+
 #ifdef CONFIG_FSL_MC_ENET
 	fdt_fixup_board_enet(blob);
 #endif

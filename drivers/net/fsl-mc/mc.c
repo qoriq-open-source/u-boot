@@ -154,6 +154,42 @@ int parse_mc_firmware_fit_image(u64 mc_fw_addr,
 }
 #endif
 
+void fdt_fsl_mc_fixup_iommu_map_entry(void *blob)
+{
+	u32 *prop;
+	u32 iommu_map[4];
+	int offset;
+	int lenp;
+
+	/* find fsl-mc node */
+	offset = fdt_path_offset(blob, "/soc/fsl-mc");
+
+	if (offset < 0)
+		offset = fdt_path_offset(blob, "/fsl-mc");
+
+	if (offset < 0) {
+		printf("%s: ERROR: fsl-mc node not found in device tree (error %d)\n",
+		       __func__, offset);
+		return;
+	}
+
+	prop = fdt_getprop_w(blob, offset, "iommu-map", &lenp);
+	if (prop == NULL) {
+		debug("\n%s: ERROR: missing iommu-map in fsl-mc bus node\n",
+			__func__);
+		return;
+	}
+
+	iommu_map[0] = cpu_to_fdt32(FSL_DPAA2_STREAM_ID_START);
+	iommu_map[1] = *++prop;
+	iommu_map[2] = cpu_to_fdt32(FSL_DPAA2_STREAM_ID_START);
+	iommu_map[3] = cpu_to_fdt32(FSL_DPAA2_STREAM_ID_END -
+		FSL_DPAA2_STREAM_ID_START);
+
+	fdt_setprop_inplace(blob, offset, "iommu-map",
+		iommu_map, sizeof(iommu_map));
+}
+
 static int mc_fixup_dpc_mac_addr(void *blob, int noff, int dpmac_id,
 		struct eth_device *eth_dev)
 {

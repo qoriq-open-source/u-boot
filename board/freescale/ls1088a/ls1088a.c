@@ -388,6 +388,8 @@ int ft_board_setup(void *blob, bd_t *bd)
 
 	fdt_fixup_memory_banks(blob, base, size, CONFIG_NR_DRAM_BANKS);
 
+	fdt_fsl_mc_fixup_iommu_map_entry(blob);
+
 #ifdef CONFIG_FSL_MC_ENET
 	fdt_fixup_board_enet(blob);
 	err = fsl_mc_ldpaa_exit(bd);
