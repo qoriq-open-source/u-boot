@@ -10,6 +10,7 @@
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/fsl_serdes.h>
+#include <asm/arch/ppa.h>
 #include <asm/arch/fdt.h>
 #include <asm/arch/mmu.h>
 #include <asm/arch/soc.h>
@@ -246,6 +247,10 @@ int misc_init_r(void)
 {
 	if (hwconfig("gpio"))
 		config_board_mux(MUX_TYPE_GPIO);
+
+#ifdef CONFIG_FSL_LS_PPA
+	ppa_init();
+#endif
 
 	return 0;
 }
