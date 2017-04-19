@@ -20,6 +20,9 @@
 #include <asm/arch/mmu.h>
 #include <asm/arch/soc.h>
 #include <fsl_sec.h>
+#ifdef CONFIG_FSL_LS_PPA
+#include <asm/arch/ppa.h>
+#endif
 
 #include "../common/qixis.h"
 #include "ls2080ardb_qixis.h"
@@ -180,6 +183,10 @@ int board_init(void)
 	select_i2c_ch_pca9547(I2C_MUX_CH_DEFAULT);
 
 	QIXIS_WRITE(rst_ctl, QIXIS_RST_CTL_RESET_EN);
+
+#ifdef CONFIG_FSL_LS_PPA
+	ppa_init();
+#endif
 
 #ifdef CONFIG_FSL_MC_ENET
 	/* invert AQR405 IRQ pins polarity */

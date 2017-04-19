@@ -19,6 +19,10 @@
 #include <asm/arch/soc.h>
 #include <hwconfig.h>
 #include <fsl_sec.h>
+#ifdef CONFIG_FSL_LS_PPA
+#include <asm/arch/ppa.h>
+#endif
+
 
 #include "../common/qixis.h"
 #include "ls2080aqds_qixis.h"
@@ -226,6 +230,10 @@ int board_init(void)
 	rtc_enable_32khz_output();
 #ifdef CONFIG_FSL_CAAM
         sec_init();
+#endif
+
+#ifdef CONFIG_FSL_LS_PPA
+	ppa_init();
 #endif
 
 	return 0;
