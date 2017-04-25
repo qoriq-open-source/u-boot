@@ -17,6 +17,7 @@
 #include <fsl-mc/fsl_mc.h>
 #include <environment.h>
 #include <asm/arch-fsl-layerscape/soc.h>
+#include <asm/arch/ppa.h>
 
 #include "../common/qixis.h"
 #include "ls1088a_qixis.h"
@@ -312,6 +313,9 @@ int board_init(void)
 	out_le32(irq_ccsr + IRQCR_OFFSET / 4, AQR105_IRQ_MASK);
 #endif
 
+#ifdef CONFIG_FSL_LS_PPA
+       ppa_init();
+#endif
 	return 0;
 }
 
