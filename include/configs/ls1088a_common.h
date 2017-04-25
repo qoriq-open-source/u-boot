@@ -30,7 +30,6 @@
 
 #define CONFIG_SUPPORT_RAW_INITRD
 
-#define  CONFIG_SPI_FLASH_BAR
 #define CONFIG_SKIP_LOWLEVEL_INIT
 
 #define CONFIG_FSL_DDR_INTERACTIVE	/* Interactive debugging */
