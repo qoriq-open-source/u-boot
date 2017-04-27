@@ -989,8 +989,20 @@ u-boot.dis:	u-boot
 ifdef CONFIG_TPL
 SPL_PAYLOAD := tpl/u-boot-with-tpl.bin
 else
+ifdef CONFIG_OF_CONTROL
+ifeq ($(CONFIG_SPL_USE_HEADER),y)
+SPL_PAYLOAD := u-boot-dtb.img
+else
+SPL_PAYLOAD := u-boot-dtb.bin
+endif   #ifeq ($(CONFIG_SPL_USE_HEADER),y)
+else
+ifeq ($(CONFIG_SPL_USE_HEADER),y)
+SPL_PAYLOAD := u-boot.img
+else
 SPL_PAYLOAD := u-boot.bin
-endif
+endif   #ifeq ($(CONFIG_SPL_USE_HEADER),y)
+endif	#ifdef CONFIG_OF_CONTROL
+endif	#ifdef CONFIG_TPL
 
 OBJCOPYFLAGS_u-boot-with-spl.bin = -I binary -O binary \
 				   --pad-to=$(CONFIG_SPL_PAD_TO)

@@ -54,6 +54,7 @@ config ARCH_LS1088A
 	bool
 	select ARMV8_SET_SMPEN
 	select FSL_LSCH3
+	select SPL_USE_HEADER
 	select SYS_FSL_DDR
 	select SYS_FSL_DDR_LE
 	select SYS_FSL_DDR_VER_50
@@ -420,6 +421,12 @@ config SYS_HAS_RGMII
 	bool
 	depends on SYS_FSL_EC1 || SYS_FSL_EC2
 
+
+config SPL_USE_HEADER
+	bool
+	depends on ARCH_LS1088A || ARCH_LS2080A
+	default y if ARCH_LS1088A
+	default y if ARCH_LS2080A
 
 config SYS_MC_RSV_MEM_ALIGN
 	hex "Management Complex reserved memory alignment"
