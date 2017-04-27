@@ -11,9 +11,9 @@
 
 #ifdef CONFIG_QSPI_BOOT
 #define CONFIG_DISPLAY_BOARDINFO_LATE
-#else
-#define CONFIG_DISPLAY_BOARDINFO
 #endif
+
+
 
 #ifndef __ASSEMBLY__
 unsigned long get_board_sys_clk(void);
@@ -198,7 +198,7 @@ unsigned long get_board_ddr_clk(void);
 					| CSPR_V)
 
 #define CONFIG_SYS_FPGA_AMASK		IFC_AMASK(64*1024)
-#if defined(CONFIG_QSPI_BOOT)
+#if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT_QSPI)
 #define CONFIG_SYS_FPGA_CSOR		CSOR_GPCM_ADM_SHIFT(0)
 #else
 #define CONFIG_SYS_FPGA_CSOR		CSOR_GPCM_ADM_SHIFT(12)
@@ -319,7 +319,7 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_SYS_EEPROM_PAGE_WRITE_DELAY_MS	5
 
 /* QSPI device */
-#if defined(CONFIG_QSPI_BOOT)
+#if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT_QSPI)
 #define CONFIG_FSL_QSPI
 #define CONFIG_SPI_FLASH_SPANSION
 #define FSL_QSPI_FLASH_SIZE		(1 << 26)
@@ -342,7 +342,11 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_SYS_MEMTEST_START	0x80000000
 #define CONFIG_SYS_MEMTEST_END		0x9fffffff
 
+#ifdef CONFIG_SPL_BUILD
+#define CONFIG_SYS_MONITOR_BASE CONFIG_SPL_TEXT_BASE
+#else
 #define CONFIG_SYS_MONITOR_BASE CONFIG_SYS_TEXT_BASE
+#endif
 
 #define CONFIG_FSL_MEMAC
 
@@ -370,6 +374,24 @@ unsigned long get_board_ddr_clk(void);
 	"sf read 0x80100000 0x800000 0x100000;" \
 	"fsl_mc start mc 0x80000000 0x80100000\0"	\
 	"mcmemsize=0x70000000 \0"
+#elif defined(CONFIG_SD_BOOT)
+#undef CONFIG_EXTRA_ENV_SETTINGS
+#define CONFIG_EXTRA_ENV_SETTINGS               \
+        "hwconfig=fsl_ddr:bank_intlv=auto\0"    \
+        "loadaddr=0x90100000\0"                 \
+        "kernel_addr=0x800\0"                \
+        "ramdisk_addr=0x800000\0"               \
+        "ramdisk_size=0x2000000\0"              \
+        "fdt_high=0xa0000000\0"                 \
+        "initrd_high=0xffffffffffffffff\0"      \
+        "kernel_start=0x8800\0"              \
+        "kernel_load=0xa0000000\0"              \
+        "kernel_size=0x14000\0"               \
+        "mcinitcmd=mmcinfo;mmc read 0x80000000 0x1800 0x800;"  \
+        "mmc read 0x80100000 0x4000 0x800;" \
+        "fsl_mc start mc 0x80000000 0x80100000\0"       \
+        "mcmemsize=0x70000000 \0"
+
 #else	/* NOR BOOT */
 #undef CONFIG_EXTRA_ENV_SETTINGS
 #define CONFIG_EXTRA_ENV_SETTINGS		\
