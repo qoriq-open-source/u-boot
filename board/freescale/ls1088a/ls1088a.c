@@ -21,6 +21,7 @@
 
 #include "../common/qixis.h"
 #include "ls1088a_qixis.h"
+#include <fsl_immap.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -293,6 +294,547 @@ void board_retimer_init(void)
 	/*return the default channel*/
 	select_i2c_ch_pca9547(I2C_MUX_CH_DEFAULT);
 }
+static int i2c_multiplexer_select_vid_channel(u8 channel)
+{
+	return select_i2c_ch_pca9547(channel);
+}
+
+/* this function set the DDR bit in case of 0.9V VDD */
+static void ddr_enable_0_9_vdd(void)
+{
+	struct ccsr_ddr *ddr1;
+	ddr1  = (void *)(CONFIG_SYS_FSL_DDR_ADDR);
+	u32 tmp;
+
+	tmp = in_le32(&ddr1->ddr_cdr1);
+
+	tmp |= DDR_CDR1_V0PT9_EN;
+	out_le32(&ddr1->ddr_cdr1, tmp);
+}
+
+/* read the current value of the LTC Regulator Voltage */
+static inline int read_voltage(void)
+{
+	int  ret, vcode = 0;
+
+	/* select the PAGE 0 using PMBus commands PAGE for VDD*/
+	ret = i2c_write(I2C_VOL_MONITOR_ADDR,
+		PMBUS_CMD_PAGE, 1, PWM_CHANNEL0, 1);
+	if (ret) {
+			printf("VID: failed to select VDD Page 0\n");
+			return ret;
+	}
+	/*read the output voltage using PMBus command READ_VOUT*/
+
+	ret = i2c_read(I2C_VOL_MONITOR_ADDR,
+		PMBUS_CMD_READ_VOUT, 1, (void *)&vcode, 2);
+	if (ret) {
+		printf("VID: failed to read the volatge\n");
+		return ret;
+	}
+	return vcode;
+}
+
+/* read the current value(SVDD) of the LTM Regulator Voltage */
+static inline int read_svdd_LTM4675(void)
+{
+	int  ret, vcode = 0;
+
+	/* select the PAGE 0 using PMBus commands PAGE for VDD*/
+	ret = i2c_write(I2C_SVDD_MONITOR_ADDR,
+		PMBUS_CMD_PAGE, 1, PWM_CHANNEL0, 1);
+	if (ret) {
+			printf("VID: failed to select VDD Page 0\n");
+			return ret;
+	}
+
+	/*read the output voltage using PMBus command READ_VOUT*/
+	ret = i2c_read(I2C_SVDD_MONITOR_ADDR,
+		PMBUS_CMD_READ_VOUT, 1, (void *)&vcode, 2);
+	if (ret) {
+		printf("VID: failed to read the volatge\n");
+		return ret;
+	}
+	return vcode;
+}
+
+
+/* returns the Lower byte of the vdd code */
+static u8 get_LSB(int vdd)
+{
+	u8 *lower = (u8 *)&vdd;
+	return *(lower);
+}
+
+/*returns the Upper byte of the vdd code*/
+static u8 get_MSB(int vdd)
+{
+	u8 *lower = (u8 *)&vdd;
+	++lower;
+	return *(lower);
+}
+
+
+/* this function sets the 5-byte buffer which needs to be sent following the
+ * PMBus command PAGE_PLUS_WRITE
+ */
+static void set_buffer_page_plus_write(u8 *buff, int vid)
+{
+	buff[0] = 0x04;
+
+	buff[1] = PWM_CHANNEL0;
+
+	buff[2] = PMBUS_CMD_VOUT_COMMAND;
+
+	buff[3] = get_LSB(vid);
+
+	buff[4] = get_MSB(vid);
+}
+/* this function sets the VDD and returns the value set */
+static int set_voltage_to_LTC(int vid)
+{
+	int ret, vdd_last;
+	u8 buff[5];
+
+	/*number of bytes of the rest of the package*/
+	set_buffer_page_plus_write((u8 *)&buff, vid);
+
+	/*write the desired voltage code to the regulator*/
+	ret = i2c_write(I2C_VOL_MONITOR_ADDR,
+		PMBUS_CMD_PAGE_PLUS_WRITE, 1, (void *)&buff, 5);
+	if (ret) {
+		printf("VID: I2C failed to write to the volatge regulator\n");
+		return -1;
+	}
+
+	/*wait for the volatge to get to the desired value*/
+
+	do {
+		vdd_last = read_voltage();
+		if (vdd_last < 0) {
+			printf("VID: Couldn't read sensor abort VID adjust\n");
+			return -1;
+		}
+	} while (vdd_last != vid);
+
+	return vdd_last;
+}
+#ifdef CONFIG_TARGET_LS1088AQDS
+static int change_0_9_svddqds(int svdd)
+{
+	int ret, vdd_last;
+	u8 buff[5];
+
+	/*number of bytes of the rest of the package*/
+	set_buffer_page_plus_write((u8 *)&buff, svdd);
+
+	/*write the desired voltage code to the SVDD regulator*/
+	ret = i2c_write(I2C_SVDD_MONITOR_ADDR,
+		PMBUS_CMD_PAGE_PLUS_WRITE, 1, (void *)&buff, 5);
+	if (ret) {
+		printf("VID: I2C failed to write to the volatge regulator\n");
+		return -1;
+	}
+
+	/*wait for the volatge to get to the desired value*/
+	do {
+		vdd_last = read_svdd_LTM4675();
+		if (vdd_last < 0) {
+			printf("VID: Couldn't read sensor abort VID adjust\n");
+			return -1;
+		}
+	} while (vdd_last != svdd);
+
+	return 1;
+}
+#else
+static int change_0_9_svddrdb(int svdd)
+{
+	int ret;
+	u8 brdcfg4;
+
+	printf("SVDD changing of RDB\n");
+
+	/*read the BRDCFG54 via CLPD*/
+	ret = i2c_read(CONFIG_SYS_I2C_FPGA_ADDR,
+		QIXIS_BRDCFG4_OFFSET, 1, (void *)&brdcfg4, 1);
+	if (ret) {
+		printf("VID: I2C failed to read the CPLD BRDCFG4\n");
+		return -1;
+	}
+
+	brdcfg4 = brdcfg4 | 0x08;
+
+	/* write to the BRDCFG4 */
+	ret = i2c_write(CONFIG_SYS_I2C_FPGA_ADDR,
+		QIXIS_BRDCFG4_OFFSET, 1, (void *)&brdcfg4, 1);
+	if (ret) {
+		debug("VID: I2C failed to set the SVDD CPLD BRDCFG4\n");
+		return -1;
+	}
+
+	/*wait for the volatge to get to the desired value*/
+	udelay(10000);
+
+	return 1;
+}
+#endif
+
+/* this function disables the SERDES, changes the SVDD Voltage and enables it*/
+int switch_svdd(u32 svdd)
+{
+	struct ccsr_gur *gur = (void *)(CONFIG_SYS_FSL_GUTS_ADDR);
+	struct ccsr_serdes *serdes1_base, *serdes2_base;
+	u32 cfg_rcwsrds1 = gur_in32(&gur->rcwsr[FSL_CHASSIS3_SRDS1_REGSR - 1]);
+	u32 cfg_rcwsrds2 = gur_in32(&gur->rcwsr[FSL_CHASSIS3_SRDS2_REGSR - 1]);
+	u32 cfg_tmp, reg = 0;
+	int ret = 1;
+	int i;
+
+	/* Only support switch SVDD to 900mV */
+	if (svdd != 0x0E66)
+		return -1;
+
+	serdes1_base = (void *)CONFIG_SYS_FSL_LSCH3_SERDES_ADDR;
+	serdes2_base =  (void *)(CONFIG_SYS_FSL_LSCH3_SERDES_ADDR + 0x10000);
+
+	/* Put the all enabled lanes in reset */
+
+#ifdef CONFIG_SYS_FSL_SRDS_1
+	cfg_tmp = cfg_rcwsrds1 & FSL_CHASSIS3_SRDS1_PRTCL_MASK;
+	cfg_tmp >>= 16;
+
+	for (i = 0; i < 4 && cfg_tmp & (0xf << (3 - i)); i++) {
+		reg = in_le32(&serdes1_base->lane[i].gcr0);
+		reg &= 0xFF9FFFFF;
+		out_le32(&serdes1_base->lane[i].gcr0, reg);
+		reg = in_le32(&serdes1_base->lane[i].gcr0);
+	}
+#endif
+
+#ifdef CONFIG_SYS_FSL_SRDS_2
+	cfg_tmp = cfg_rcwsrds2 & FSL_CHASSIS3_SRDS2_PRTCL_MASK;
+
+	for (i = 0; i < 4 && cfg_tmp & (0xf << (3 - i)); i++) {
+		reg = in_le32(&serdes2_base->lane[i].gcr0);
+		reg &= 0xFF9FFFFF;
+		out_le32(&serdes2_base->lane[i].gcr0, reg);
+		reg = in_le32(&serdes2_base->lane[i].gcr0);
+	}
+#endif
+
+	/* Put the all enabled PLL in reset */
+#ifdef CONFIG_SYS_FSL_SRDS_1
+	cfg_tmp = cfg_rcwsrds1 & 0x3;
+	for (i = 0; i < 2 && !(cfg_tmp & (0x1 << (1 - i))); i++) {
+		reg = in_le32(&serdes1_base->bank[i].rstctl);
+		reg &= 0xFFFFFFBF;
+		reg |= 0x10000000;
+		out_le32(&serdes1_base->bank[i].rstctl, reg);
+	}
+	udelay(1);
+
+	reg = in_le32(&serdes1_base->bank[i].rstctl);
+	reg &= 0xFFFFFF1F;
+	out_le32(&serdes1_base->bank[i].rstctl, reg);
+#endif
+
+#ifdef CONFIG_SYS_FSL_SRDS_2
+
+	cfg_tmp = cfg_rcwsrds1 & 0xC;
+	cfg_tmp >>= 2;
+	for (i = 0; i < 2 && !(cfg_tmp & (0x1 << (1 - i))); i++) {
+		reg = in_le32(&serdes2_base->bank[i].rstctl);
+		reg &= 0xFFFFFFBF;
+		reg |= 0x10000000;
+		out_le32(&serdes2_base->bank[i].rstctl, reg);
+	}
+	udelay(1);
+
+	reg = in_le32(&serdes2_base->bank[i].rstctl);
+	reg &= 0xFFFFFF1F;
+	out_le32(&serdes2_base->bank[i].rstctl, reg);
+
+#endif
+
+	/* Put the Rx/Tx calibration into reset */
+#ifdef CONFIG_SYS_FSL_SRDS_1
+	reg = in_le32(&serdes1_base->srdstcalcr);
+	reg &= 0xF7FFFFFF;
+	out_le32(&serdes1_base->srdstcalcr, reg);
+	reg = in_le32(&serdes1_base->srdsrcalcr);
+	reg &= 0xF7FFFFFF;
+	out_le32(&serdes1_base->srdsrcalcr, reg);
+#endif
+
+#ifdef CONFIG_SYS_FSL_SRDS_2
+	reg = in_le32(&serdes2_base->srdstcalcr);
+	reg &= 0xF7FFFFFF;
+	out_le32(&serdes2_base->srdstcalcr, reg);
+	reg = in_le32(&serdes2_base->srdsrcalcr);
+	reg &= 0xF7FFFFFF;
+	out_le32(&serdes2_base->srdsrcalcr, reg);
+#endif
+
+#ifdef CONFIG_TARGET_LS1088AQDS
+	ret = change_0_9_svddqds(svdd);
+	if (ret < 0) {
+		printf("could not change SVDD\n");
+		ret = -1;
+	}
+#else
+	ret = change_0_9_svddrdb(svdd);
+	if (ret < 0) {
+		printf("could not change SVDD\n");
+		ret = -1;
+	}
+#endif
+
+	/* For each PLL that’s not disabled via RCW enable the SERDES */
+#ifdef CONFIG_SYS_FSL_SRDS_1
+	cfg_tmp = cfg_rcwsrds1 & 0x3;
+	for (i = 0; i < 2 && !(cfg_tmp & (0x1 << (1 - i))); i++) {
+		reg = in_le32(&serdes1_base->bank[i].rstctl);
+		reg |= 0x00000020;
+		out_le32(&serdes1_base->bank[i].rstctl, reg);
+		udelay(1);
+
+		reg = in_le32(&serdes1_base->bank[i].rstctl);
+		reg |= 0x00000080;
+		out_le32(&serdes1_base->bank[i].rstctl, reg);
+		udelay(1);
+		/* Take the Rx/Tx calibration out of reset */
+		if (!(cfg_tmp == 0x3 && i == 1)) {
+			udelay(1);
+			reg = in_le32(&serdes1_base->srdstcalcr);
+			reg |= 0x08000000;
+			out_le32(&serdes1_base->srdstcalcr, reg);
+			reg = in_le32(&serdes1_base->srdsrcalcr);
+			reg |= 0x08000000;
+			out_le32(&serdes1_base->srdsrcalcr, reg);
+		}
+	udelay(1);
+	}
+#endif
+#ifdef CONFIG_SYS_FSL_SRDS_2
+	cfg_tmp = cfg_rcwsrds1 & 0xC;
+	cfg_tmp >>= 2;
+	for (i = 0; i < 2 && !(cfg_tmp & (0x1 << (1 - i))); i++) {
+		reg = in_le32(&serdes2_base->bank[i].rstctl);
+		reg |= 0x00000020;
+		out_le32(&serdes2_base->bank[i].rstctl, reg);
+		udelay(1);
+
+		reg = in_le32(&serdes2_base->bank[i].rstctl);
+		reg |= 0x00000080;
+		out_le32(&serdes2_base->bank[i].rstctl, reg);
+		udelay(1);
+
+		/* Take the Rx/Tx calibration out of reset */
+		if (!(cfg_tmp == 0x3 && i == 1)) {
+			udelay(1);
+			reg = in_le32(&serdes2_base->srdstcalcr);
+			reg |= 0x08000000;
+			out_le32(&serdes2_base->srdstcalcr, reg);
+			reg = in_le32(&serdes2_base->srdsrcalcr);
+			reg |= 0x08000000;
+			out_le32(&serdes2_base->srdsrcalcr, reg);
+		}
+
+		udelay(1);
+	}
+#endif
+
+	/* Wait for at lesat 625us to ensure the PLLs being reset are locked */
+	udelay(800);
+
+#ifdef CONFIG_SYS_FSL_SRDS_1
+	cfg_tmp = cfg_rcwsrds1 & 0x3;
+	for (i = 0; i < 2 && !(cfg_tmp & (0x1 << (1 - i))); i++) {
+		/* if the PLL is not locked, set RST_ERR */
+		reg = in_le32(&serdes1_base->bank[i].pllcr0);
+		if (!((reg >> 23) & 0x1)) {
+			reg = in_le32(&serdes1_base->bank[i].rstctl);
+			reg |= 0x20000000;
+			out_le32(&serdes1_base->bank[i].rstctl, reg);
+		} else {
+			udelay(1);
+			reg = in_le32(&serdes1_base->bank[i].rstctl);
+			reg &= 0xFFFFFFEF;
+			reg |= 0x00000040;
+			out_le32(&serdes1_base->bank[i].rstctl, reg);
+			udelay(1);
+		}
+	}
+#endif
+
+#ifdef CONFIG_SYS_FSL_SRDS_2
+	cfg_tmp = cfg_rcwsrds1 & 0xC;
+	cfg_tmp >>= 2;
+
+	for (i = 0; i < 2 && !(cfg_tmp & (0x1 << (1 - i))); i++) {
+		reg = in_le32(&serdes2_base->bank[i].pllcr0);
+		if (!((reg >> 23) & 0x1)) {
+			reg = in_le32(&serdes2_base->bank[i].rstctl);
+			reg |= 0x20000000;
+			out_le32(&serdes2_base->bank[i].rstctl, reg);
+		} else {
+			udelay(1);
+			reg = in_le32(&serdes2_base->bank[i].rstctl);
+			reg &= 0xFFFFFFEF;
+			reg |= 0x00000040;
+			out_le32(&serdes2_base->bank[i].rstctl, reg);
+			udelay(1);
+		}
+	}
+#endif
+	/* Take the all enabled lanes out of reset */
+#ifdef CONFIG_SYS_FSL_SRDS_1
+	cfg_tmp = cfg_rcwsrds1 & FSL_CHASSIS3_SRDS1_PRTCL_MASK;
+	cfg_tmp >>= 16;
+
+	for (i = 0; i < 4 && cfg_tmp & (0xf << (3 - i)); i++) {
+		reg = in_le32(&serdes1_base->lane[i].gcr0);
+		reg |= 0x00600000;
+		out_le32(&serdes1_base->lane[i].gcr0, reg);
+	}
+#endif
+#ifdef CONFIG_SYS_FSL_SRDS_2
+	cfg_tmp = cfg_rcwsrds2 & FSL_CHASSIS3_SRDS2_PRTCL_MASK;
+
+	for (i = 0; i < 4 && cfg_tmp & (0xf << (3 - i)); i++) {
+		reg = in_le32(&serdes2_base->lane[i].gcr0);
+		reg |= 0x00600000;
+		out_le32(&serdes2_base->lane[i].gcr0, reg);
+	}
+#endif
+
+	/* For each PLL being reset, and achieved PLL lock set RST_DONE */
+#ifdef CONFIG_SYS_FSL_SRDS_1
+	cfg_tmp = cfg_rcwsrds1 & 0x3;
+	for (i = 0; i < 2; i++) {
+		reg = in_le32(&serdes1_base->bank[i].pllcr0);
+		if (!(cfg_tmp & (0x1 << (1 - i))) && ((reg >> 23) & 0x1)) {
+			reg = in_le32(&serdes1_base->bank[i].rstctl);
+			reg |= 0x40000000;
+			out_le32(&serdes1_base->bank[i].rstctl, reg);
+		}
+	}
+#endif
+#ifdef CONFIG_SYS_FSL_SRDS_2
+	cfg_tmp = cfg_rcwsrds1 & 0xC;
+	cfg_tmp >>= 2;
+
+	for (i = 0; i < 2; i++) {
+		reg = in_le32(&serdes2_base->bank[i].pllcr0);
+		if (!(cfg_tmp & (0x1 << (1 - i))) && ((reg >> 23) & 0x1)) {
+			reg = in_le32(&serdes2_base->bank[i].rstctl);
+			reg |= 0x40000000;
+			out_le32(&serdes2_base->bank[i].rstctl, reg);
+		}
+	}
+#endif
+
+	return 1;
+}
+
+static int adjust_vdd(ulong vdd_override)
+{
+	int re_enable = disable_interrupts();
+	struct ccsr_gur *gur = (void *)(CONFIG_SYS_FSL_GUTS_ADDR);
+	u32 fusesr;
+	u8 vid;
+	int vdd_target, vdd_last;
+	int ret;
+	static const uint16_t vdd[32] = {
+		0,		/* unused */
+		0x0FCC,		/* 0.9875V */
+		0x0F99,		/* 0.9750V */
+		9625,
+		0x0F33,
+		9375,
+		9250,
+		9125,
+		0x0E66,		/* 0.9000V */
+		8875,
+		8750,
+		8625,
+		8500,
+		8375,
+		8250,
+		8125,
+		0x1000,		/* 1.0000V */
+		0x1033,		/* 1.0125V */
+		0x1066,		/* 1.0250V */
+		10375,
+		10500,
+		10625,
+		10750,
+		10875,
+		11000,
+		0,      /* reserved */
+	};
+
+	/*select the channel on which LTC3882 voltage regulator is present*/
+	ret = i2c_multiplexer_select_vid_channel(I2C_MUX_CH_VOL_MONITOR);
+	if (ret) {
+		debug("VID: I2C failed to switch channel\n");
+		ret = -1;
+		goto exit;
+	}
+
+	/* get the voltage ID from fuse status register */
+	fusesr = in_le32(&gur->dcfg_fusesr);
+	debug("FUSESR register read %x\n", fusesr);
+	if (fusesr == 0) {
+		ret = -1;
+		goto exit;
+	}
+	/*calculate the VID */
+	vid = (fusesr >> FSL_CHASSIS3_DCFG_FUSESR_ALTVID_SHIFT) &
+		FSL_CHASSIS3_DCFG_FUSESR_ALTVID_MASK;
+	if ((vid == 0) || (vid == FSL_CHASSIS3_DCFG_FUSESR_ALTVID_MASK)) {
+		vid = (fusesr >> FSL_CHASSIS3_DCFG_FUSESR_VID_SHIFT) &
+			FSL_CHASSIS3_DCFG_FUSESR_VID_MASK;
+	}
+
+
+	debug("VID = %d\n", vid);
+	vdd_target = vdd[vid];
+	debug("vdd_target read %d\n", vdd_target);
+/*
+ * Read voltage monitor to check real voltage.
+ */
+	vdd_last = read_voltage();
+	if (vdd_last < 0) {
+		printf("VID: Couldn't read sensor abort VID adjustment\n");
+		ret = -1;
+		goto exit;
+	}
+
+	vdd_last = set_voltage_to_LTC(vdd_target);
+	if (vdd_last > 0) {
+		printf("VID: Core voltage after change is %x\n", vdd_last);
+	} else {
+		ret = -1;
+		goto exit;
+	}
+
+	if (vdd_last == 0x0E66) {
+		ddr_enable_0_9_vdd();
+		ret = switch_svdd(0x0E66);
+		if (ret < 0) {
+			ret = -1;
+			goto exit;
+		}
+	}
+
+exit:
+	if (re_enable)
+		enable_interrupts();
+	i2c_multiplexer_select_vid_channel(I2C_MUX_CH_DEFAULT);
+	return ret;
+}
 
 int board_init(void)
 {
@@ -312,6 +854,8 @@ int board_init(void)
 	/* invert AQR105 IRQ pins polarity */
 	out_le32(irq_ccsr + IRQCR_OFFSET / 4, AQR105_IRQ_MASK);
 #endif
+	if (adjust_vdd(0) < 0)
+		printf("core voltage not adjusted\n");
 
 #ifdef CONFIG_FSL_LS_PPA
        ppa_init();
