@@ -1,4 +1,5 @@
 /*
+ * Copyright 2017 NXP
  * Copyright 2015 Freescale Semiconductor
  *
  * SPDX-License-Identifier:	GPL-2.0+
@@ -58,6 +59,8 @@ struct cpu_type {
 #define SVR_LS1084A		0x870302
 #define SVR_LS1088A		0x870300
 #define SVR_LS1044A		0x870322
+#define SVR_LS2081A		0x870919
+#define SVR_LS2041A		0x870915
 
 #define SVR_DEV_LS2080A		0x8701
 
