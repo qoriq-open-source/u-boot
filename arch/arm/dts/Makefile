@@ -164,6 +164,7 @@ dtb-$(CONFIG_LS102XA) += ls1021a-qds-duart.dtb \
 	ls1021a-iot-duart.dtb
 dtb-$(CONFIG_FSL_LSCH3) += fsl-ls2080a-qds.dtb \
 	fsl-ls2080a-rdb.dtb \
+	fsl-ls2081a-rdb.dtb \
 	fsl-ls1088a-qds.dtb \
 	fsl-ls1088a-rdb.dtb \
 	fsl-ls2088a-rdb-qspi.dtb
