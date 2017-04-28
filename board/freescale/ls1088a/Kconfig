@@ -28,4 +28,5 @@ config SYS_SOC
 config SYS_CONFIG_NAME
 	default "ls1088ardb"
 
+source "board/freescale/common/Kconfig"
 endif

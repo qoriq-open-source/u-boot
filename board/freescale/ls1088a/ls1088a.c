@@ -857,6 +857,9 @@ int board_init(void)
 	if (adjust_vdd(0) < 0)
 		printf("core voltage not adjusted\n");
 
+#ifdef CONFIG_FSL_CAAM
+	sec_init();
+#endif
 #ifdef CONFIG_FSL_LS_PPA
        ppa_init();
 #endif
@@ -879,9 +882,6 @@ void detail_board_ddr_info(void)
 #if defined(CONFIG_ARCH_MISC_INIT)
 int arch_misc_init(void)
 {
-#ifdef CONFIG_FSL_CAAM
-	sec_init();
-#endif
 	return 0;
 }
 #endif

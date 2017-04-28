@@ -80,7 +80,12 @@
 	"setenv bs_device " __stringify(CONFIG_BS_ADDR_DEVICE)";" \
 	"setenv bs_size " __stringify(CONFIG_BS_SIZE)";"
 
-/* For secure boot flow, default environment used will be used */
+/* Define BS_COPY_COMMAND to copy bootscript for different types of BOOT
+ * For RAMBOOT, check the type of RAMBOOT to define copy command
+ * For SoC's where QSPI XIP mode doesnot work - CONFIG_BS_COPY_QSPI_IP is used
+ * and for rest it is just a copy command
+ */
+
 #if defined(CONFIG_SYS_RAMBOOT) || defined(CONFIG_NAND_BOOT) || \
 	defined(CONFIG_SD_BOOT)
 #if defined(CONFIG_RAMBOOT_NAND) || defined(CONFIG_NAND_BOOT)
