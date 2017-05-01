@@ -366,6 +366,27 @@ unsigned long get_board_sys_clk(void);
 /* Initial environment variables */
 #undef CONFIG_EXTRA_ENV_SETTINGS
 #ifdef CONFIG_SECURE_BOOT
+#ifdef CONFIG_QSPI_BOOT
+#define CONFIG_EXTRA_ENV_SETTINGS		\
+	"hwconfig=fsl_ddr:bank_intlv=auto\0"	\
+	"scriptaddr=0x80800000\0"		\
+	"kernel_addr_r=0x81000000\0"		\
+	"pxefile_addr_r=0x81000000\0"		\
+	"fdt_addr_r=0x88000000\0"		\
+	"ramdisk_addr_r=0x89000000\0"		\
+	"loadaddr=0x80100000\0"			\
+	"kernel_addr=0x100000\0"		\
+	"ramdisk_size=0x2000000\0"		\
+	"fdt_high=0xa0000000\0"			\
+	"initrd_high=0xffffffffffffffff\0"	\
+	"kernel_start=0x21000000\0"		\
+	"mcmemsize=0x40000000\0"		\
+	"mcinitcmd=esbc_validate 0x20700000;"	\
+	"esbc_validate 0x20740000;"		\
+	"fsl_mc start mc 0x20a00000"		\
+	" 0x20e00000 \0"			\
+	BOOTENV
+#else /* !(CONFIG_QSPI_BOOT) */
 #define CONFIG_EXTRA_ENV_SETTINGS		\
 	"hwconfig=fsl_ddr:bank_intlv=auto\0"	\
 	"scriptaddr=0x80800000\0"		\
@@ -389,6 +410,7 @@ unsigned long get_board_sys_clk(void);
 	"fsl_mc start mc 0x580300000"           \
 	" 0x580800000 \0"                       \
 	BOOTENV
+#endif
 #else
 #ifdef CONFIG_QSPI_BOOT
 #define CONFIG_EXTRA_ENV_SETTINGS		\
