@@ -16,18 +16,18 @@
 #endif
 
 #if defined(CONFIG_SD_BOOT)
-#define CONFIG_ENV_OFFSET		(2 * 1024 * 1024)
+#define CONFIG_ENV_OFFSET		(3 * 1024 * 1024)
 #define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_SYS_MMC_ENV_DEV		0
 #define CONFIG_ENV_SIZE			0x2000
 #elif defined(CONFIG_QSPI_BOOT)
 #define CONFIG_ENV_IS_IN_SPI_FLASH
 #define CONFIG_ENV_SIZE			0x2000          /* 8KB */
-#define CONFIG_ENV_OFFSET		0x200000        /* 2MB */
+#define CONFIG_ENV_OFFSET		0x300000        /* 3MB */
 #define CONFIG_ENV_SECT_SIZE		0x40000
 #else
 #define CONFIG_ENV_IS_IN_FLASH
-#define CONFIG_ENV_ADDR			(CONFIG_SYS_FLASH_BASE + 0x200000)
+#define CONFIG_ENV_ADDR			(CONFIG_SYS_FLASH_BASE + 0x300000)
 #define CONFIG_ENV_SECT_SIZE		0x20000
 #define CONFIG_ENV_SIZE			0x20000
 #endif
@@ -299,13 +299,13 @@
 	"ramdisk_size=0x2000000\0"		\
 	"fdt_high=0xa0000000\0"			\
 	"initrd_high=0xffffffffffffffff\0"	\
-	"kernel_start=0x1100000\0"		\
+	"kernel_start=0x1000000\0"		\
 	"kernel_load=0xa0000000\0"		\
 	"kernel_size=0x2800000\0"		\
-	"mcinitcmd=sf probe 0:0;sf read 0xa0300000 0x300000 0x100000;"    \
-	"sf read 0xa0c80000 0xc80000 0x100000; esbc_validate 0xa0c80000;" \
-	"sf read 0xa0800000 0x800000 0x100000;" \
-	"sf read 0xa0cc0000 0xcc0000 0x100000;esbc_validate 0xa0cc0000;"  \
+	"mcinitcmd=sf probe 0:0;sf read 0xa0300000 0xA00000 0x100000;"    \
+	"sf read 0xa0700000 0x700000 0x100000; esbc_validate 0xa0700000;" \
+	"sf read 0xa0800000 0xE00000 0x100000;" \
+	"sf read 0xa0740000 0x740000 0x100000;esbc_validate 0xa0740000;"  \
 	"fsl_mc start mc 0xa0300000 0xa0800000\0"	\
 	"mcmemsize=0x70000000 \0"
 #else /* if !(CONFIG_SECURE_BOOT) */
@@ -318,11 +318,11 @@
 	"ramdisk_size=0x2000000\0"		\
 	"fdt_high=0xa0000000\0"			\
 	"initrd_high=0xffffffffffffffff\0"	\
-	"kernel_start=0x1100000\0"		\
+	"kernel_start=0x1000000\0"		\
 	"kernel_load=0xa0000000\0"		\
 	"kernel_size=0x2800000\0"		\
-	"mcinitcmd=sf probe 0:0;sf read 0x80000000 0x300000 0x100000;"	\
-	"sf read 0x80100000 0x800000 0x100000;" \
+	"mcinitcmd=sf probe 0:0;sf read 0x80000000 0xA00000 0x100000;"	\
+	"sf read 0x80100000 0xE00000 0x100000;" \
 	"fsl_mc start mc 0x80000000 0x80100000\0"	\
 	"mcmemsize=0x70000000 \0"
 #endif /* CONFIG_SECURE_BOOT */
@@ -336,11 +336,11 @@
         "ramdisk_size=0x2000000\0"              \
         "fdt_high=0xa0000000\0"                 \
         "initrd_high=0xffffffffffffffff\0"      \
-        "kernel_start=0x8800\0"              \
+        "kernel_start=0x8000\0"              \
         "kernel_load=0xa0000000\0"              \
         "kernel_size=0x14000\0"               \
-        "mcinitcmd=mmcinfo;mmc read 0x80000000 0x1800 0x800;"  \
-        "mmc read 0x80100000 0x4000 0x800;" \
+        "mcinitcmd=mmcinfo;mmc read 0x80000000 0x5000 0x800;"  \
+        "mmc read 0x80100000 0x7000 0x800;" \
         "fsl_mc start mc 0x80000000 0x80100000\0"       \
         "mcmemsize=0x70000000 \0"
 
@@ -355,12 +355,10 @@
 	"ramdisk_size=0x2000000\0"		\
 	"fdt_high=0xa0000000\0"			\
 	"initrd_high=0xffffffffffffffff\0"	\
-	"kernel_start=0x1100000\0"		\
+	"kernel_start=0x1000000\0"		\
 	"kernel_load=0xa0000000\0"		\
 	"kernel_size=0x2800000\0"		\
-	"mcinitcmd=fsl_mc start mc 0x580300000 0x580800000\0"	\
-	"sf read 0x80100000 0x800000 0x100000;" \
-	"fsl_mc start mc 0x80000000 0x80100000\0"	\
+	"mcinitcmd=fsl_mc start mc 0x580A00000 0x580E00000\0"	\
 	"mcmemsize=0x70000000 \0"
 #endif
 
