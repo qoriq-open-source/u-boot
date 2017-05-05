@@ -9,11 +9,11 @@
 
 #include "ls1088a_common.h"
 
-#ifdef CONFIG_QSPI_BOOT
+#if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT_QSPI)
 #define CONFIG_DISPLAY_BOARDINFO_LATE
+#else
+#define CONFIG_DISPLAY_BOARDINFO
 #endif
-
-
 
 #ifndef __ASSEMBLY__
 unsigned long get_board_sys_clk(void);
@@ -324,7 +324,6 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_SPI_FLASH_SPANSION
 #define FSL_QSPI_FLASH_SIZE		(1 << 26)
 #define FSL_QSPI_FLASH_NUM		2
-#define CONFIG_SYS_FSL_QSPI_AHB
 #endif
 
 #ifdef CONFIG_FSL_DSPI
