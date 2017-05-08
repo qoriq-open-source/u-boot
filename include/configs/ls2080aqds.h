@@ -238,7 +238,7 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_SYS_NAND_U_BOOT_OFFS	(256 * 1024)
 #define CONFIG_SYS_NAND_U_BOOT_SIZE	(640 * 1024)
 #elif defined(CONFIG_SD_BOOT)
-#define CONFIG_ENV_OFFSET		0x200000
+#define CONFIG_ENV_OFFSET		0x300000
 #define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_SYS_MMC_ENV_DEV		0
 #define CONFIG_ENV_SIZE			0x20000
@@ -377,6 +377,23 @@ unsigned long get_board_ddr_clk(void);
 	"esbc_validate 0x580740000;"            \
 	"fsl_mc start mc 0x580a00000"           \
 	" 0x580e00000 \0"
+#elif defined(CONFIG_SD_BOOT)
+#undef CONFIG_EXTRA_ENV_SETTINGS
+#define CONFIG_EXTRA_ENV_SETTINGS               \
+	"hwconfig=fsl_ddr:bank_intlv=auto\0"    \
+	"loadaddr=0x90100000\0"                 \
+	"kernel_addr=0x800\0"                \
+	"ramdisk_addr=0x800000\0"               \
+	"ramdisk_size=0x2000000\0"              \
+	"fdt_high=0xa0000000\0"                 \
+	"initrd_high=0xffffffffffffffff\0"      \
+	"kernel_start=0x8000\0"              \
+	"kernel_load=0xa0000000\0"              \
+	"kernel_size=0x14000\0"               \
+	"mcinitcmd=mmcinfo;mmc read 0x80000000 0x5000 0x800;"  \
+	"mmc read 0x80100000 0x7000 0x800;" \
+	"fsl_mc start mc 0x80000000 0x80100000\0"       \
+	"mcmemsize=0x70000000 \0"
 #else
 #define CONFIG_EXTRA_ENV_SETTINGS		\
 	"hwconfig=fsl_ddr:bank_intlv=auto\0"	\
