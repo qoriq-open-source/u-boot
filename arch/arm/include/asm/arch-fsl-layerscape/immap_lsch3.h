@@ -130,6 +130,7 @@
 #define DCFG_RCWSR15_IFCGRPABASE_QSPI	0x3
 
 #define DCFG_DCSR_BASE		0X700100000ULL
+#define DCSR_BASE              0x700000000ULL
 #define DCSR_USB_PHY1                  0x4600000
 #define DCSR_USB_PHY2                  0x4610000
 #define DCSR_USB_PHY_RX_OVRD_IN_HI     0x1006
