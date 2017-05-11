@@ -345,6 +345,75 @@ static void fdt_fixup_msi(void *blob)
 }
 #endif
 
+
+int fdt_fixup_kaslr(void *fdt)
+{
+	int nodeoffset;
+	int err, ret = 0;
+	u8 rand[8];
+
+#if defined(CONFIG_ARMV8_SEC_FIRMWARE_SUPPORT)
+	/* Check if random seed generation is  supported */
+	if (sec_firmware_support_hwrng() == false)
+		return 0;
+
+	ret = sec_firmware_get_random(rand, 8);
+	if (ret < 0) {
+		printf("WARNING: could not get random number to set",
+		       "kaslr-seed\n");
+		return 0;
+	}
+
+	err = fdt_check_header(fdt);
+	if (err < 0) {
+		printf("fdt_chosen: %s\n", fdt_strerror(err));
+		return 0;
+	}
+
+	/* find or create "/chosen" node. */
+	nodeoffset = fdt_find_or_add_subnode(fdt, 0, "chosen");
+	if (nodeoffset < 0)
+		return 0;
+
+	err = fdt_setprop(fdt, nodeoffset, "kaslr-seed", rand,
+				  sizeof(rand));
+	if (err < 0) {
+		printf("WARNING: could not set kaslr-seed %s.\n",
+		       fdt_strerror(err));
+		return 0;
+	}
+	ret = 1;
+#endif
+
+	return ret;
+}
+
+/* Remove JR node used by SEC firmware */
+void fdt_fixup_remove_jr(void *blob)
+{
+	int jr_node, addr_cells, len;
+	int crypto_node = fdt_path_offset(blob, "crypto");
+	u64 jr_offset, used_jr;
+	fdt32_t *reg;
+
+	used_jr = sec_firmware_used_jobring_offset();
+	of_bus_default_count_cells(blob, crypto_node, &addr_cells, NULL);
+
+	jr_node = fdt_node_offset_by_compatible(blob, crypto_node,
+						"fsl,sec-v4.0-job-ring");
+
+	while (jr_node != -FDT_ERR_NOTFOUND) {
+		reg = (fdt32_t *)fdt_getprop(blob, jr_node, "reg", &len);
+		jr_offset = of_read_number(reg, addr_cells);
+		if (jr_offset == used_jr) {
+			fdt_del_node(blob, jr_node);
+			break;
+		}
+		jr_node = fdt_node_offset_by_compatible(blob, jr_node,
+							"fsl,sec-v4.0-job-ring");
+	}
+}
+
 void ft_cpu_setup(void *blob, bd_t *bd)
 {
 #ifdef CONFIG_FSL_LSCH2
@@ -357,6 +426,9 @@ void ft_cpu_setup(void *blob, bd_t *bd)
 #if CONFIG_SYS_FSL_SEC_COMPAT >= 4
 	else {
 		ccsr_sec_t __iomem *sec;
+
+		if (fdt_fixup_kaslr(blob))
+			fdt_fixup_remove_jr(blob);
 
 		sec = (void __iomem *)CONFIG_SYS_FSL_SEC_ADDR;
 		fdt_fixup_crypto_node(blob, sec_in32(&sec->secvid_ms));
@@ -395,4 +467,5 @@ void ft_cpu_setup(void *blob, bd_t *bd)
 #ifdef CONFIG_HAS_FEATURE_ENHANCED_MSI
 	fdt_fixup_msi(blob);
 #endif
+
 }

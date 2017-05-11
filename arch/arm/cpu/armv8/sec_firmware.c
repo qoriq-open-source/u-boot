@@ -232,6 +232,59 @@ unsigned int sec_firmware_support_psci_version(void)
 #endif
 
 /*
+ * Check with sec_firmware if it supports random number generation
+ * via HW RNG
+ *
+ * The return value will be true if it is supported
+ */
+bool sec_firmware_support_hwrng(void)
+{
+	uint8_t rand[8];
+	if (sec_firmware_addr & SEC_FIRMWARE_RUNNING) {
+		if (!sec_firmware_get_random(rand, 8))
+			return true;
+	}
+
+	return false;
+}
+
+/*
+ * sec_firmware_get_random - Initialize the SEC Firmware
+ * @rand:		random number buffer to be filled
+ * @bytes:		Number of bytes of random number to be supported
+ * @eret:		-1 in case of error, 0 for success
+ */
+int sec_firmware_get_random(uint8_t *rand, int bytes)
+{
+	unsigned long long num;
+	struct pt_regs regs;
+	int param1;
+
+	if (!bytes || bytes > 8) {
+		printf("Max Random bytes genration supported is 8\n");
+		return -1;
+	}
+#define SIP_RNG_64 0xC200FF11
+	regs.regs[0] = SIP_RNG_64;
+
+	if (bytes <= 4)
+		param1 = 0;
+	else
+		param1 = 1;
+	regs.regs[1] = param1;
+
+	smc_call(&regs);
+
+	if (regs.regs[0])
+		return -1;
+
+	num = regs.regs[1];
+	memcpy(rand, &num, bytes);
+
+	return 0;
+}
+
+/*
  * sec_firmware_init - Initialize the SEC Firmware
  * @sec_firmware_img:	the SEC Firmware image address
  * @eret_hold_l:	the address to hold exception return address low
