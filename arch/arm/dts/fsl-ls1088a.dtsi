@@ -7,7 +7,7 @@
  */
 
 / {
-	compatible = "fsl,ls2080a";
+	compatible = "fsl,ls1088a";
 	interrupt-parent = <&gic>;
 	#address-cells = <2>;
 	#size-cells = <2>;
