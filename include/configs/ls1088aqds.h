@@ -429,6 +429,14 @@ unsigned long get_board_ddr_clk(void);
 	"mcmemsize=0x70000000 \0"
 #endif
 
+/*
+ * USB
+ */
+#define CONFIG_HAS_FSL_XHCI_USB
+#define CONFIG_USB_XHCI_FSL
+#define CONFIG_USB_MAX_CONTROLLER_COUNT                2
+#define CONFIG_SYS_USB_XHCI_MAX_ROOT_PORTS     2
+
 #ifdef CONFIG_FSL_MC_ENET
 #define CONFIG_FSL_MEMAC
 #define	CONFIG_PHYLIB
