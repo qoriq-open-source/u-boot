@@ -370,11 +370,11 @@ unsigned long get_board_ddr_clk(void);
 	"kernel_start=0x1000000\0"		\
 	"kernel_load=0xa0000000\0"		\
 	"kernel_size=0x2800000\0"		\
-	"mcinitcmd=sf probe 0:0;sf read 0xa0300000 0xA00000 0x100000;"	  \
-	"sf read 0xa0700000 0x700000 0x100000; esbc_validate 0xa0700000;" \
-	"sf read 0xa0800000 0xE00000 0x100000;"	\
-	"sf read 0xa0740000 0x740000 0x100000;esbc_validate 0xa0740000;"  \
-	"fsl_mc start mc 0xa0300000 0xa0800000\0"       \
+	"mcinitcmd=sf probe 0:0;sf read 0xa0a00000 0xa00000 0x100000;"	  \
+	"sf read 0xa0700000 0x700000 0x4000; esbc_validate 0xa0700000;" \
+	"sf read 0xa0e00000 0xe00000 0x100000;"	\
+	"sf read 0xa0740000 0x740000 0x4000; esbc_validate 0xa0740000;"  \
+	"fsl_mc start mc 0xa0a00000 0xa0e00000\0"       \
 	"mcmemsize=0x70000000 \0"
 #else /* if !(CONFIG_SECURE_BOOT) */
 #undef CONFIG_EXTRA_ENV_SETTINGS
