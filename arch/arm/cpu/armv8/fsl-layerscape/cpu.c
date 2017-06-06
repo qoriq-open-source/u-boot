@@ -28,6 +28,7 @@
 #endif
 #include <fsl_immap.h>
 
+
 DECLARE_GLOBAL_DATA_PTR;
 
 struct mm_region *mem_map = early_map;
@@ -505,6 +506,10 @@ int arch_early_init_r(void)
 		if (fsl_layerscape_wake_seconday_cores())
 			printf("Did not wake secondary cores\n");
 	}
+
+#ifdef CONFIG_SYS_HAS_RGMII
+	fsl_rgmii_init();
+#endif
 
 #ifdef CONFIG_SYS_HAS_SERDES
 	fsl_serdes_init();

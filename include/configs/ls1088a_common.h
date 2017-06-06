@@ -21,6 +21,7 @@
 /* We need architecture specific misc initializations */
 #define CONFIG_ARCH_MISC_INIT
 
+
 /* Link Definitions */
 #ifdef CONFIG_QSPI_BOOT
 #define CONFIG_SYS_TEXT_BASE            0x20100000
