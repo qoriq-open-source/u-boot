@@ -282,10 +282,25 @@
 #endif
 #define CONFIG_FSL_MEMAC
 
-/* Initial environment variables */
 #if defined(CONFIG_QSPI_BOOT)
-#ifdef CONFIG_SECURE_BOOT
+#define MC_INIT_CMD				\
+	"mcinitcmd=sf probe 0:0;sf read 0x80000000 0xA00000 0x100000;"	\
+	"sf read 0x80100000 0xE00000 0x100000;"				\
+	"fsl_mc start mc 0x80000000 0x80100000\0"
+#elif defined(CONFIG_SD_BOOT)
+#define MC_INIT_CMD				\
+	"mcinitcmd=mmcinfo;mmc read 0x80000000 0x5000 0x800;"		\
+	"mmc read 0x80100000 0x7000 0x800;"				\
+	"fsl_mc start mc 0x80000000 0x80100000\0"
+#else
+#define MC_INIT_CMD			\
+	"mcinitcmd=fsl_mc start mc 0x580A00000 0x580E00000\0"
+#endif
+
+/* Initial environment variables */
 #undef CONFIG_EXTRA_ENV_SETTINGS
+#ifdef CONFIG_SECURE_BOOT
+#if defined(CONFIG_QSPI_BOOT)
 #define CONFIG_EXTRA_ENV_SETTINGS		\
 	"hwconfig=fsl_ddr:bank_intlv=auto\0"	\
 	"loadaddr=0x90100000\0"			\
@@ -303,58 +318,66 @@
 	"sf read 0xa0740000 0x740000 0x4000; esbc_validate 0xa0740000;"  \
 	"fsl_mc start mc 0xa0a00000 0xa0e00000\0"	\
 	"mcmemsize=0x70000000 \0"
-#else /* if !(CONFIG_SECURE_BOOT) */
-#undef CONFIG_EXTRA_ENV_SETTINGS
+#endif	/* CONFIG_QSPI_BOOT */
+#else /* if !(ONFIG_SECURE_BOOT) */
 #define CONFIG_EXTRA_ENV_SETTINGS		\
 	"hwconfig=fsl_ddr:bank_intlv=auto\0"	\
-	"loadaddr=0x90100000\0"			\
-	"kernel_addr=0x100000\0"		\
 	"ramdisk_addr=0x800000\0"		\
 	"ramdisk_size=0x2000000\0"		\
 	"fdt_high=0xa0000000\0"			\
 	"initrd_high=0xffffffffffffffff\0"	\
-	"kernel_start=0x1000000\0"		\
-	"kernel_load=0xa0000000\0"		\
+	"fdt_addr=0x64f00000\0"			\
+	"kernel_addr=0x1000000\0"		\
+	"scriptaddr=0x80000000\0"		\
+	"fdtheader_addr_r=0x80100000\0"		\
+	"kernelheader_addr_r=0x80200000\0"	\
+	"kernel_addr_r=0x81000000\0"		\
+	"fdt_addr_r=0x90000000\0"		\
+	"load_addr=0xa0000000\0"		\
 	"kernel_size=0x2800000\0"		\
-	"mcinitcmd=sf probe 0:0;sf read 0x80000000 0xA00000 0x100000;"	\
-	"sf read 0x80100000 0xE00000 0x100000;" \
-	"fsl_mc start mc 0x80000000 0x80100000\0"	\
-	"mcmemsize=0x70000000 \0"
-#endif /* CONFIG_SECURE_BOOT */
-#elif defined(CONFIG_SD_BOOT)
-#undef CONFIG_EXTRA_ENV_SETTINGS
-#define CONFIG_EXTRA_ENV_SETTINGS               \
-        "hwconfig=fsl_ddr:bank_intlv=auto\0"    \
-        "loadaddr=0x90100000\0"                 \
-        "kernel_addr=0x800\0"                \
-        "ramdisk_addr=0x800000\0"               \
-        "ramdisk_size=0x2000000\0"              \
-        "fdt_high=0xa0000000\0"                 \
-        "initrd_high=0xffffffffffffffff\0"      \
-        "kernel_start=0x8000\0"              \
-        "kernel_load=0xa0000000\0"              \
-        "kernel_size=0x14000\0"               \
-        "mcinitcmd=mmcinfo;mmc read 0x80000000 0x5000 0x800;"  \
-        "mmc read 0x80100000 0x7000 0x800;" \
-        "fsl_mc start mc 0x80000000 0x80100000\0"       \
-        "mcmemsize=0x70000000 \0"
+	MC_INIT_CMD				\
+	BOOTENV					\
+	"boot_scripts=ls1088ardb_boot.scr\0"	\
+	"scan_dev_for_boot_part="		\
+		"part list ${devtype} ${devnum} devplist; "	\
+		"env exists devplist || setenv devplist 1; "	\
+		"for distro_bootpart in ${devplist}; do "	\
+			"if fstype ${devtype} "			\
+				"${devnum}:${distro_bootpart} "	\
+				"bootfstype; then "		\
+				"run scan_dev_for_boot; "	\
+			"fi; "					\
+		"done\0"					\
+	"installer=load mmc 0:2 $load_addr "			\
+		"/flex_installer_arm64.itb; "			\
+		"env exists mcinitcmd && run mcinitcmd && "	\
+		"mmc read 0x80200000 0x6800 0x800;"		\
+		" fsl_mc apply dpl 0x80200000;" 		\
+		"bootm $load_addr#ls1088ardb\0"			\
+	"qspi_bootcmd=echo Trying load from qspi..;"		\
+		"sf probe && sf read $load_addr "		\
+		"$kernel_addr $kernel_size &&"			\
+		" bootm $load_addr#$board\0"			\
+	"nor_bootcmd=echo Trying load from nor..;"		\
+		"cp.b $kernel_addr $load_addr "			\
+		"$kernel_size && bootm $load_addr#$board\0"
+#endif
 
 
-#else 	/* NOR_BOOT */
-#undef CONFIG_EXTRA_ENV_SETTINGS
-#define CONFIG_EXTRA_ENV_SETTINGS		\
-	"hwconfig=fsl_ddr:bank_intlv=auto\0"	\
-	"loadaddr=0x90100000\0"			\
-	"kernel_addr=0x100000\0"		\
-	"ramdisk_addr=0x800000\0"		\
-	"ramdisk_size=0x2000000\0"		\
-	"fdt_high=0xa0000000\0"			\
-	"initrd_high=0xffffffffffffffff\0"	\
-	"kernel_start=0x1000000\0"		\
-	"kernel_load=0xa0000000\0"		\
-	"kernel_size=0x2800000\0"		\
-	"mcinitcmd=fsl_mc start mc 0x580A00000 0x580E00000\0"	\
-	"mcmemsize=0x70000000 \0"
+#undef CONFIG_BOOTCOMMAND
+#ifdef CONFIG_QSPI_BOOT
+/* Try to boot an on-QSPI kernel first, then do normal distro boot */
+#define CONFIG_BOOTCOMMAND                                      \
+			"env exists mcinitcmd && run mcinitcmd && "	\
+			"sf read 0x80200000 0xd00000 0x100000;"	\
+			" fsl_mc apply dpl 0x80200000;" 	\
+			"run distro_bootcmd;run qspi_bootcmd"
+#else
+/* Try to boot an on-NOR kernel first, then do normal distro boot */
+#define CONFIG_BOOTCOMMAND                                              \
+			"env exists mcinitcmd && run mcinitcmd && "	\
+			" fsl_mc apply dpl 0x580d00000;"            	\
+			"run distro_bootcmd;run nor_bootcmd"
 #endif
 
 /* MAC/PHY configuration */
