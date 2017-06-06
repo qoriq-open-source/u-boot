@@ -970,6 +970,9 @@ config TARGET_LS1088ARDB
 	select ARCH_LS1088A
 	select ARM64
 	select ARMV8_MULTIENTRY
+	select BOARD_LATE_INIT
+	select SUPPORT_SPL
+	select ARCH_MISC_INIT
 	help
 	  Support for NXP LS1088ARDB platform.
 	  The LS1088AA Reference design board (RDB) is a high-performance

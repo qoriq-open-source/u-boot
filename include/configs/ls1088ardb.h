@@ -9,7 +9,7 @@
 
 #include "ls1088a_common.h"
 
-#ifdef CONFIG_QSPI_BOOT
+#if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT_QSPI)
 #define CONFIG_DISPLAY_BOARDINFO_LATE
 #else
 #define CONFIG_DISPLAY_BOARDINFO
@@ -279,6 +279,12 @@
 #define CONFIG_CMD_MEMTEST
 #define CONFIG_SYS_MEMTEST_START	0x80000000
 #define CONFIG_SYS_MEMTEST_END		0x9fffffff
+
+#ifdef CONFIG_SPL_BUILD
+#define CONFIG_SYS_MONITOR_BASE CONFIG_SPL_TEXT_BASE
+#else
+#define CONFIG_SYS_MONITOR_BASE CONFIG_SYS_TEXT_BASE
+#endif
 #define CONFIG_FSL_MEMAC
 
 /* Initial environment variables */
@@ -299,6 +305,25 @@
 	"sf read 0x80100000 0x800000 0x100000;" \
 	"fsl_mc start mc 0x80000000 0x80100000\0"	\
 	"mcmemsize=0x70000000 \0"
+#elif defined(CONFIG_SD_BOOT)
+#undef CONFIG_EXTRA_ENV_SETTINGS
+#define CONFIG_EXTRA_ENV_SETTINGS               \
+        "hwconfig=fsl_ddr:bank_intlv=auto\0"    \
+        "loadaddr=0x90100000\0"                 \
+        "kernel_addr=0x800\0"                \
+        "ramdisk_addr=0x800000\0"               \
+        "ramdisk_size=0x2000000\0"              \
+        "fdt_high=0xa0000000\0"                 \
+        "initrd_high=0xffffffffffffffff\0"      \
+        "kernel_start=0x8800\0"              \
+        "kernel_load=0xa0000000\0"              \
+        "kernel_size=0x14000\0"               \
+        "mcinitcmd=mmcinfo;mmc read 0x80000000 0x1800 0x800;"  \
+        "mmc read 0x80100000 0x4000 0x800;" \
+        "fsl_mc start mc 0x80000000 0x80100000\0"       \
+        "mcmemsize=0x70000000 \0"
+
+
 #else 	/* NOR_BOOT */
 #undef CONFIG_EXTRA_ENV_SETTINGS
 #define CONFIG_EXTRA_ENV_SETTINGS		\
