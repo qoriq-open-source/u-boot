@@ -73,36 +73,27 @@ int checkboard(void)
 #ifdef CONFIG_TARGET_LS2081ARDB
 #ifdef CONFIG_FSL_QIXIS
 	sw = QIXIS_READ(arch);
-	printf("Board Arch: V%d, ", sw >> 4);
 	printf("Board version: %c, ", (sw & 0xf) + 'A');
 
 	sw = QIXIS_READ(brdcfg[0]);
-	sw = (sw & QIXIS_QMAP_MASK) >> QIXIS_QMAP_SHIFT;
+	sw = sw  >> QIXIS_QMAP_SHIFT;
 	switch (sw) {
 	case 0:
+	case 4:
 		puts("boot from QSPI DEV#0\n");
-		puts("QSPI_CSA_1 mapped to QSPI DEV#1\n");
 		break;
 	case 1:
 		puts("boot from QSPI DEV#1\n");
-		puts("QSPI_CSA_1 mapped to QSPI DEV#0\n");
 		break;
 	case 2:
-		puts("boot from QSPI EMU\n");
-		puts("QSPI_CSA_1 mapped to QSPI DEV#0\n");
-		break;
 	case 3:
 		puts("boot from QSPI EMU\n");
-		puts("QSPI_CSA_1 mapped to QSPI DEV#1\n");
-		break;
-	case 4:
-		puts("boot from QSPI DEV#0\n");
-		puts("QSPI_CSA_1 mapped to QSPI EMU\n");
 		break;
 	default:
 		printf("invalid setting of SW%u\n", sw);
 		break;
 	}
+	printf("FPGA: v%d.%d\n", QIXIS_READ(scver), QIXIS_READ(tagdata));
 #endif
 	puts("SERDES1 Reference : ");
 	printf("Clock1 = 100MHz ");
