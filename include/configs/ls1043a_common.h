@@ -278,7 +278,7 @@
 #define CONFIG_EXTRA_ENV_SETTINGS		\
 	"hwconfig=fsl_ddr:bank_intlv=auto\0"	\
 	"fdt_high=0xffffffffffffffff\0"		\
-	"initrd_high=0xfffffffffffffffn\0"	\
+	"initrd_high=0xffffffffffffffff\0"	\
 	"fdt_addr=0x64f00000\0"		 \
 	"kernelheader_addr=0x60800000\0"        \
 	"kernel_addr=0x61000000\0"		\
