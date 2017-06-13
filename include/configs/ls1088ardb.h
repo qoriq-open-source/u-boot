@@ -286,15 +286,18 @@
 #define MC_INIT_CMD				\
 	"mcinitcmd=sf probe 0:0;sf read 0x80000000 0xA00000 0x100000;"	\
 	"sf read 0x80100000 0xE00000 0x100000;"				\
-	"fsl_mc start mc 0x80000000 0x80100000\0"
+	"fsl_mc start mc 0x80000000 0x80100000\0"			\
+	"mcmemsize=0x70000000"
 #elif defined(CONFIG_SD_BOOT)
 #define MC_INIT_CMD				\
 	"mcinitcmd=mmcinfo;mmc read 0x80000000 0x5000 0x800;"		\
 	"mmc read 0x80100000 0x7000 0x800;"				\
-	"fsl_mc start mc 0x80000000 0x80100000\0"
+	"fsl_mc start mc 0x80000000 0x80100000\0"			\
+	"mcmemsize=0x70000000"
 #else
 #define MC_INIT_CMD			\
-	"mcinitcmd=fsl_mc start mc 0x580A00000 0x580E00000\0"
+	"mcinitcmd=fsl_mc start mc 0x580A00000 0x580E00000\0"		\
+	"mcmemsize=0x70000000"
 #endif
 
 /* Initial environment variables */
