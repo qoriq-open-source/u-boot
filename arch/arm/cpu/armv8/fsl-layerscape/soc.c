@@ -34,7 +34,7 @@ DECLARE_GLOBAL_DATA_PTR;
 static void erratum_a009008(void)
 {
 #ifdef CONFIG_SYS_FSL_ERRATUM_A009008
-#if defined(CONFIG_LS1043A) || defined(CONFIG_LS1046A)
+#if defined(CONFIG_ARCH_LS1043A) || defined(CONFIG_ARCH_LS1046A)
 u32 __iomem *scfg = (u32 __iomem *)SCFG_BASE;
 u32 val = scfg_in32(scfg + SCFG_USB3PRM1CR_USB1 / 4);
 val &= ~(0xF << 6);
@@ -58,7 +58,7 @@ scfg_out32(scfg + SCFG_USB3PRM1CR / 4, val|(USB_TXVREFTUNE << 6));
 static void erratum_a009798(void)
 {
 #ifdef CONFIG_SYS_FSL_ERRATUM_A009798
-#if defined(CONFIG_LS1043A) || defined(CONFIG_LS1046A)
+#if defined(CONFIG_ARCH_LS1043A) || defined(CONFIG_ARCH_LS1046A)
 u32 __iomem *scfg = (u32 __iomem *)SCFG_BASE;
 u32 val = scfg_in32(scfg + SCFG_USB3PRM1CR_USB1 / 4);
 scfg_out32(scfg + SCFG_USB3PRM1CR_USB1 / 4 , val & USB_SQRXTUNE);
@@ -66,7 +66,7 @@ val = gur_in32(scfg + SCFG_USB3PRM1CR_USB2 / 4);
 scfg_out32(scfg + SCFG_USB3PRM1CR_USB2 / 4 , val & USB_SQRXTUNE);
 val = scfg_in32(scfg + SCFG_USB3PRM1CR_USB3 / 4);
 scfg_out32(scfg + SCFG_USB3PRM1CR_USB3 / 4 , val & USB_SQRXTUNE);
-#elif defined(CONFIG_LS2080A) || defined(CONFIG_LS2085A)
+#elif defined(CONFIG_ARCH_LS2080A)
 u32 __iomem *scfg = (u32 __iomem *)SCFG_BASE;
 u32 val = scfg_in32(scfg + SCFG_USB3PRM1CR / 4);
 scfg_out32(scfg + SCFG_USB3PRM1CR / 4, val & USB_SQRXTUNE);
@@ -77,7 +77,7 @@ scfg_out32(scfg + SCFG_USB3PRM1CR / 4, val & USB_SQRXTUNE);
 static void erratum_a008997(void)
 {
 #ifdef CONFIG_SYS_FSL_ERRATUM_A008997
-#if defined(CONFIG_LS1043A) || defined(CONFIG_LS1046A)
+#if defined(CONFIG_ARCH_LS1043A) || defined(CONFIG_ARCH_LS1046A)
 	u32 __iomem *scfg = (u32 __iomem *)SCFG_BASE;
 	u32 val = scfg_in32(scfg + SCFG_USB3PRM2CR_USB1 / 4);
 	val &= ~(0x7F << 9);
@@ -91,7 +91,7 @@ static void erratum_a008997(void)
 	val &= ~(0x7F << 9);
 	scfg_out32(scfg + SCFG_USB3PRM2CR_USB3 / 4,
 		   val | (USB_PCSTXSWINGFULL << 9));
-#elif defined(CONFIG_LS2080A) || defined(CONFIG_LS2085A)
+#elif defined(CONFIG_ARCH_LS2080A)
 	u32 __iomem *scfg = (u32 __iomem *)SCFG_BASE;
 	u32 val = scfg_in32(scfg + SCFG_USB3PRM2CR / 4);
 	val &= ~(0x7F << 9);
@@ -105,7 +105,7 @@ static void erratum_a009007(void)
 {
 /* TODO:implement the out_be16 instead of writew which is taking
 little endian style */
-#if defined(CONFIG_LS1043A) || defined(CONFIG_LS1046A)
+#if defined(CONFIG_ARCH_LS1043A) || defined(CONFIG_ARCH_LS1046A)
 	u32 __iomem *usb_phy = (u32 __iomem *)USB_PHY1;
 	writew(USB_PHY_RX_EQ_VAL_1, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
 	writew(USB_PHY_RX_EQ_VAL_2, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
@@ -121,7 +121,7 @@ little endian style */
 	writew(USB_PHY_RX_EQ_VAL_2, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
 	writew(USB_PHY_RX_EQ_VAL_3, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
 	writew(USB_PHY_RX_EQ_VAL_4, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
-#elif defined(CONFIG_LS2080A) || defined(CONFIG_LS2085A)
+#elif defined(CONFIG_ARCH_LS2080A)
 	u32 __iomem *dcsr = (u32 __iomem *)DCSR_BASE;
 	writew(USB_PHY_RX_EQ_VAL_1,
 	       (u8 *)(dcsr) + DCSR_USB_PHY1 + DCSR_USB_PHY_RX_OVRD_IN_HI);

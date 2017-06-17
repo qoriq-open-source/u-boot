@@ -72,4 +72,16 @@ config SYS_FSL_IFC_BANK_COUNT
 config SYS_FSL_ERRATUM_A008407
 	bool
 
+config SYS_FSL_ERRATUM_A009007
+	bool
+
+config SYS_FSL_ERRATUM_A008997
+	bool
+
+config SYS_FSL_ERRATUM_A009798
+	bool
+
+config SYS_FSL_ERRATUM_A009008
+	bool
+
 endmenu

@@ -232,6 +232,7 @@ struct ccsr_gur {
 #define SCFG_USB3PRM1CR_USB1           0x070
 #define SCFG_USB3PRM2CR_USB1           0x074
 #define SCFG_USB3PRM1CR_USB2           0x07C
+#define SCFG_USB3PRM2CR_USB2           0x080
 #define SCFG_USB3PRM1CR_USB3           0x088
 #define SCFG_USB3PRM2CR_USB3           0x08c
 #define USB_TXVREFTUNE                 0x9

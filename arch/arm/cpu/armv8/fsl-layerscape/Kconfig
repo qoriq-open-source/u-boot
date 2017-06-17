@@ -440,6 +440,18 @@ config SYS_FSL_ERRATUM_A009660
 config SYS_FSL_ERRATUM_A009929
 	bool
 
+config SYS_FSL_ERRATUM_A009007
+	bool
+
+config SYS_FSL_ERRATUM_A008997
+	bool
+
+config SYS_FSL_ERRATUM_A009798
+	bool
+
+config SYS_FSL_ERRATUM_A009008
+	bool
+
 config SYS_FSL_EC1
 	bool
 
