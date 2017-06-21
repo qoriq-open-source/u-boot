@@ -292,7 +292,7 @@
 	"esbc_validate 0x80700000 && "			\
 	"esbc_validate 0x80740000 ;"			\
 	"fsl_mc start mc 0x80000000 0x80100000\0"	\
-	"mcmemsize=0x70000000"
+	"mcmemsize=0x70000000\0"
 #elif defined(CONFIG_SD_BOOT)
 #define MC_INIT_CMD				\
 	"mcinitcmd=mmcinfo;mmc read 0x80000000 0x5000 0x800;"		\
@@ -303,14 +303,14 @@
 	"esbc_validate 0x80700000 && "			\
 	"esbc_validate 0x80740000 ;"			\
 	"fsl_mc start mc 0x80000000 0x80100000\0"			\
-	"mcmemsize=0x70000000"
+	"mcmemsize=0x70000000\0"
 #else
 #define MC_INIT_CMD			\
 	"mcinitcmd=env exists secureboot && "	\
 	"esbc_validate 0x580700000 && "	\
 	"esbc_validate 0x580740000;"	\
 	"fsl_mc start mc 0x580A00000 0x580E00000\0"			\
-	"mcmemsize=0x70000000"
+	"mcmemsize=0x70000000\0"
 #endif
 
 /* Initial environment variables */
