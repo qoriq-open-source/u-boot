@@ -704,10 +704,15 @@ int get_dpl_apply_status(void)
 
 /**
  * Return the MC address of private DRAM block.
+ * MC address should be least significant 512MB address
+ * of MC private memory
  */
 u64 mc_get_dram_addr(void)
 {
-	return gd->arch.resv_ram;
+	size_t mc_ram_size = mc_get_dram_block_size();
+
+	return (gd->arch.resv_ram + mc_ram_size - 1) &
+		MC_RAM_BASE_ADDR_ALIGNMENT_MASK;
 }
 
 /**
