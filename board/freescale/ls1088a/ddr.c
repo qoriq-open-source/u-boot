@@ -64,10 +64,7 @@ found:
 		pbsp->clk_adjust, pbsp->wrlvl_start, pbsp->wrlvl_ctl_2,
 		pbsp->wrlvl_ctl_3);
 
-	popts->data_bus_width = 0;      /* 64b data bus */
-	popts->otf_burst_chop_en = 0;
-	popts->burst_length = DDR_BL8;
-	popts->bstopre = 0;		/* enable auto precharge */
+
 
 	popts->half_strength_driver_enable = 0;
 	/*
@@ -76,24 +73,17 @@ found:
 	popts->wrlvl_override = 1;
 	popts->wrlvl_sample = 0xf;
 
-	/*
-	 * Rtt and Rtt_WR override
-	 */
-	popts->rtt_override = 0;
 
 	/* Enable ZQ calibration */
 	popts->zq_en = 1;
 
-#if defined(CONFIG_TARGET_LS1088AQDS)
-	popts->ddr_cdr1 = DDR_CDR1_DHC_EN | DDR_CDR1_ODT(DDR_CDR_ODT_80ohm);
-	popts->ddr_cdr2 = DDR_CDR2_ODT(DDR_CDR_ODT_80ohm) |
-			  DDR_CDR2_VREF_TRAIN_EN | DDR_CDR2_VREF_RANGE_2;
-#else
+	/* Enable DDR hashing */
+	popts->addr_hash = 1;
+
 	popts->ddr_cdr1 = DDR_CDR1_DHC_EN | DDR_CDR1_ODT(DDR_CDR_ODT_60ohm);
-	popts->ddr_cdr2 = DDR_CDR2_ODT(DDR_CDR_ODT_100ohm) |
-			  DDR_CDR2_VREF_OVRD(70);       /* Vref = 70% */
-#endif
-	popts->cpo_sample = 0x6d;
+	popts->ddr_cdr2 = DDR_CDR2_ODT(DDR_CDR_ODT_60ohm) |
+			  DDR_CDR2_VREF_TRAIN_EN | DDR_CDR2_VREF_RANGE_2;
+
 }
 
 
