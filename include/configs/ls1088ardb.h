@@ -316,6 +316,7 @@
 /* Initial environment variables */
 #undef CONFIG_EXTRA_ENV_SETTINGS
 #define CONFIG_EXTRA_ENV_SETTINGS		\
+	"BOARD=ls1088ardb\0"	\
 	"hwconfig=fsl_ddr:bank_intlv=auto\0"	\
 	"ramdisk_addr=0x800000\0"		\
 	"ramdisk_size=0x2000000\0"		\
@@ -323,6 +324,7 @@
 	"initrd_high=0xffffffffffffffff\0"	\
 	"fdt_addr=0x64f00000\0"			\
 	"kernel_addr=0x1000000\0"		\
+	"kernel_addr_sd=0x8000\0"		\
 	"kernel_start=0x580100000\0"		\
 	"kernelheader_start=0x580800000\0"		\
 	"scriptaddr=0x80000000\0"		\
@@ -335,6 +337,7 @@
 	"fdt_addr_r=0x90000000\0"		\
 	"load_addr=0xa0000000\0"		\
 	"kernel_size=0x2800000\0"		\
+	"kernel_size_sd=0x14000\0"		\
 	MC_INIT_CMD				\
 	BOOTENV					\
 	"boot_scripts=ls1088ardb_boot.scr\0"	\
@@ -375,16 +378,20 @@
 		"$kernel_addr $kernel_size ; env exists secureboot "	\
 		"&& sf read $kernelheader_addr_r $kernelheader_addr "	\
 		"$kernelheader_size && esbc_validate ${kernelheader_addr_r}; "	\
-		" bootm $load_addr#$board\0"			\
+		" bootm $load_addr#$BOARD\0"			\
 	"nor_bootcmd=echo Trying load from nor..;"		\
 		"cp.b $kernel_start $load_addr "			\
 		"$kernel_size ; env exists secureboot && "	\
 		"cp.b $kernelheader_start $kernelheader_addr_r "	\
 		"$kernelheader_size && esbc_validate ${kernelheader_addr_r}; "	\
-		"bootm $load_addr#$board\0"
+		"bootm $load_addr#$BOARD\0"			\
+	"sd_bootcmd=echo Trying load from sd card..;"		\
+		"mmcinfo; mmc read $load_addr "			\
+		"$kernel_addr_sd $kernel_size_sd ;"	\
+		" bootm $load_addr#$BOARD\0"
 
 #undef CONFIG_BOOTCOMMAND
-#ifdef CONFIG_QSPI_BOOT
+#if defined(CONFIG_QSPI_BOOT)
 /* Try to boot an on-QSPI kernel first, then do normal distro boot */
 #define CONFIG_BOOTCOMMAND                                      \
 			"env exists mcinitcmd && run mcinitcmd && "	\
@@ -394,6 +401,13 @@
 			"&& esbc_validate 0x80780000 " 	\
 			"&& fsl_mc apply dpl 0x80200000;" 	\
 			"run distro_bootcmd;run qspi_bootcmd"
+#elif defined(CONFIG_SD_BOOT)
+#define CONFIG_BOOTCOMMAND                                      \
+			"env exists mcinitcmd && run mcinitcmd ;"	\
+			"&& env exists mcinitcmd && mmcinfo; "		\
+			"mmc read 0x88000000 0x6800 0x800; "		\
+			"&& fsl_mc apply dpl 0x88000000;"            	\
+			"run distro_bootcmd;run sd_bootcmd"
 #else
 /* Try to boot an on-NOR kernel first, then do normal distro boot */
 #define CONFIG_BOOTCOMMAND                                              \
