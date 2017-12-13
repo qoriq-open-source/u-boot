@@ -28,10 +28,10 @@ struct __packed hif_header_s {
 };
 
 struct __packed buf_desc {
-	u32 ctrl;
-	u32 status;
-	u32 data;
-	u32 next;
+	volatile u32 ctrl;
+	volatile u32 status;
+	volatile u32 data;
+	volatile u32 next;
 };
 
 struct rx_desc_s {
